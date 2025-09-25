@@ -12,6 +12,7 @@ using Umbraco.Cms.Core.PublishedCache;
 using Umbraco.Cms.Core.Routing;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Services.Navigation;
+using Umbraco.Extensions.PublishedContent;
 
 namespace Umbraco.Extensions;
 
@@ -28,32 +29,9 @@ public static class PublishedContentExtensions
     ///     The specific culture to get the name for. If null is used the current culture is used (Default is
     ///     null).
     /// </param>
+    [Obsolete("Use PublishedContentCultureExtensions.Name() instead. Will be removed in V17.")]
     public static string Name(this IPublishedContent content, IVariationContextAccessor? variationContextAccessor, string? culture = null)
-    {
-        if (content == null)
-        {
-            throw new ArgumentNullException(nameof(content));
-        }
-
-        // invariant has invariant value (whatever the requested culture)
-        if (!content.ContentType.VariesByCulture())
-        {
-            return content.Cultures.TryGetValue(string.Empty, out PublishedCultureInfo? invariantInfos)
-                ? invariantInfos.Name
-                : string.Empty;
-        }
-
-        // handle context culture for variant
-        if (culture == null)
-        {
-            culture = variationContextAccessor?.VariationContext?.Culture ?? string.Empty;
-        }
-
-        // get
-        return culture != string.Empty && content.Cultures.TryGetValue(culture, out PublishedCultureInfo? infos)
-            ? infos.Name
-            : string.Empty;
-    }
+        => PublishedContentCultureExtensions.Name(content, variationContextAccessor, culture);
 
     #endregion
 
@@ -109,8 +87,9 @@ public static class PublishedContentExtensions
     ///     A value indicating whether the content is of a content type composed of a content type identified by the
     ///     alias.
     /// </returns>
+    [Obsolete("Use PublishedContentTypeExtensions.IsComposedOf() instead. Will be removed in V17.")]
     public static bool IsComposedOf(this IPublishedContent content, string alias) =>
-        content.ContentType.CompositionAliases.InvariantContains(alias);
+        PublishedContentTypeExtensions.IsComposedOf(content, alias);
 
     #endregion
 
@@ -181,6 +160,7 @@ public static class PublishedContentExtensions
     ///         specified culture. Otherwise, it is the invariant url.
     ///     </para>
     /// </remarks>
+    [Obsolete("Use PublishedContentUrlExtensions.Url() instead. Will be removed in V17.")]
     public static string Url(this IPublishedContent content, IPublishedUrlProvider publishedUrlProvider, string? culture = null, UrlMode mode = UrlMode.Default)
     {
         if (publishedUrlProvider == null)
@@ -210,22 +190,17 @@ public static class PublishedContentExtensions
     ///     Determines whether the content has a culture.
     /// </summary>
     /// <remarks>Culture is case-insensitive.</remarks>
+    [Obsolete("Use PublishedContentCultureExtensions.HasCulture() instead. Will be removed in V17.")]
     public static bool HasCulture(this IPublishedContent content, string? culture)
-    {
-        if (content == null)
-        {
-            throw new ArgumentNullException(nameof(content));
-        }
-
-        return content.Cultures.ContainsKey(culture ?? string.Empty);
-    }
+        => PublishedContentCultureExtensions.HasCulture(content, culture);
 
     /// <summary>
     ///     Determines whether the content is invariant, or has a culture.
     /// </summary>
     /// <remarks>Culture is case-insensitive.</remarks>
+    [Obsolete("Use PublishedContentCultureExtensions.IsInvariantOrHasCulture() instead. Will be removed in V17.")]
     public static bool IsInvariantOrHasCulture(this IPublishedContent content, string culture)
-        => !content.ContentType.VariesByCulture() || content.Cultures.ContainsKey(culture ?? string.Empty);
+        => PublishedContentCultureExtensions.IsInvariantOrHasCulture(content, culture);
 
     /// <summary>
     ///     Gets the culture date of the content item.
@@ -264,16 +239,9 @@ public static class PublishedContentExtensions
     ///     Returns the current template Alias
     /// </summary>
     /// <returns>Empty string if none is set.</returns>
+    [Obsolete("Use PublishedContentTemplateExtensions.GetTemplateAlias() instead. Will be removed in V17.")]
     public static string GetTemplateAlias(this IPublishedContent content, IFileService fileService)
-    {
-        if (content.TemplateId.HasValue == false)
-        {
-            return string.Empty;
-        }
-
-        ITemplate? template = fileService.GetTemplate(content.TemplateId.Value);
-        return template?.Alias ?? string.Empty;
-    }
+        => PublishedContentTemplateExtensions.GetTemplateAlias(content, fileService);
 
     public static bool IsAllowedTemplate(this IPublishedContent content, IContentTypeService contentTypeService, WebRoutingSettings webRoutingSettings, int templateId) =>
         content.IsAllowedTemplate(contentTypeService, webRoutingSettings.DisableAlternativeTemplates, webRoutingSettings.ValidateAlternativeTemplates, templateId);
@@ -424,8 +392,9 @@ public static class PublishedContentExtensions
     /// <param name="content">The content to determine content type of.</param>
     /// <param name="docTypeAlias">The alias of the content type to test against.</param>
     /// <returns>True if the content is of the specified content type; otherwise false.</returns>
+    [Obsolete("Use PublishedContentTypeExtensions.IsDocumentType() instead. Will be removed in V17.")]
     public static bool IsDocumentType(this IPublishedContent content, string docTypeAlias) =>
-        content.ContentType.Alias.InvariantEquals(docTypeAlias);
+        PublishedContentTypeExtensions.IsDocumentType(content, docTypeAlias);
 
     /// <summary>
     ///     Determines whether the specified content is a specified content type or it's derived types.
@@ -451,26 +420,33 @@ public static class PublishedContentExtensions
 
     #region IsSomething: equality
 
-    public static bool IsEqual(this IPublishedContent content, IPublishedContent other) => content.Id == other.Id;
+    [Obsolete("Use PublishedContentTypeExtensions.IsEqual() instead. Will be removed in V17.")]
+    public static bool IsEqual(this IPublishedContent content, IPublishedContent other) => 
+        PublishedContentTypeExtensions.IsEqual(content, other);
 
+    [Obsolete("Use PublishedContentTypeExtensions.IsNotEqual() instead. Will be removed in V17.")]
     public static bool IsNotEqual(this IPublishedContent content, IPublishedContent other) =>
-        content.IsEqual(other) == false;
+        PublishedContentTypeExtensions.IsNotEqual(content, other);
 
     #endregion
 
     #region IsSomething: ancestors and descendants
 
+    [Obsolete("Use PublishedContentNavigationExtensions.IsDescendant() instead. Will be removed in V17.")]
     public static bool IsDescendant(this IPublishedContent content, IPublishedContent other) =>
-        other.Level < content.Level && content.Path.InvariantStartsWith(other.Path.EnsureEndsWith(','));
+        PublishedContentNavigationExtensions.IsDescendant(content, other);
 
+    [Obsolete("Use PublishedContentNavigationExtensions.IsDescendantOrSelf() instead. Will be removed in V17.")]
     public static bool IsDescendantOrSelf(this IPublishedContent content, IPublishedContent other) =>
-        content.Path.InvariantEquals(other.Path) || content.IsDescendant(other);
+        PublishedContentNavigationExtensions.IsDescendantOrSelf(content, other);
 
+    [Obsolete("Use PublishedContentNavigationExtensions.IsAncestor() instead. Will be removed in V17.")]
     public static bool IsAncestor(this IPublishedContent content, IPublishedContent other) =>
-        content.Level < other.Level && other.Path.InvariantStartsWith(content.Path.EnsureEndsWith(','));
+        PublishedContentNavigationExtensions.IsAncestor(content, other);
 
+    [Obsolete("Use PublishedContentNavigationExtensions.IsAncestorOrSelf() instead. Will be removed in V17.")]
     public static bool IsAncestorOrSelf(this IPublishedContent content, IPublishedContent other) =>
-        other.Path.InvariantEquals(content.Path) || content.IsAncestor(other);
+        PublishedContentNavigationExtensions.IsAncestorOrSelf(content, other);
 
     #endregion
 
