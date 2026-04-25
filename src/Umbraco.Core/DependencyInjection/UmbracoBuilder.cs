@@ -207,7 +207,10 @@ namespace Umbraco.Cms.Core.DependencyInjection
 
             Services.AddSingleton<IApplicationPathResolver, ApplicationPathResolver>();
             Services.AddSingleton<IUmbracoUriMapper, UmbracoUriMapper>();
-            Services.AddSingleton<UriUtility>();
+            // Factory registration disambiguates UriUtility's two public constructors;
+            // [ActivatorUtilitiesConstructor] is not consulted by the default DI container
+            // when ValidateOnBuild is enabled.
+            Services.AddSingleton(sp => new UriUtility(sp.GetRequiredService<IUmbracoUriMapper>()));
 
             Services.AddSingleton<IMetricsConsentService, MetricsConsentService>();
 
