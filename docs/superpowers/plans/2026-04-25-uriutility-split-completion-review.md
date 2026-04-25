@@ -89,3 +89,46 @@ The delivered branch achieves the design's stated goal: a strictly-immutable res
 
 This implementation plan is considered **complete with the following caveats:**
 - Run `dotnet test tests/Umbraco.Tests.Integration/Umbraco.Tests.Integration.csproj` to completion (or rely on upstream CI) and confirm a green result before opening the PR for merge. Until then, plan success criterion §9.6 is documented but not empirically verified end-to-end on this branch.
+
+---
+
+## 9. Post-Review Addendum (2026-04-25, after full integration run)
+
+**What happened.** The caveat in §8 was honored: the full integration suite was run to completion against `planfirst@bc9fd0b17d`. The run failed in 2 m 55 s with **1,511 failed / 74 passed / 1,585 total**, all failures cascading from a single root cause:
+
+```
+Unable to activate type 'Umbraco.Cms.Core.Routing.UriUtility'.
+The following constructors are ambiguous:
+Void .ctor(Umbraco.Cms.Core.Routing.IUmbracoUriMapper)
+Void .ctor(Umbraco.Cms.Core.Hosting.IHostingEnvironment)
+```
+
+**Why the earlier `[ActivatorUtilitiesConstructor]` fix was insufficient.** The integration test fixture (`UmbracoTestServerTestBase.cs:261-262` and `CoreConfigurationHttpTests.cs:124-125`) configures the DI container with `ValidateOnBuild = true` and `ValidateScopes = true`. When `ValidateOnBuild` is enabled, the default ASP.NET Core `ServiceProvider` walks every registered service descriptor and constructs each type at startup. **`[ActivatorUtilitiesConstructor]` is honored by `ActivatorUtilities.CreateInstance<T>` but not by the default container's service-resolution path under `ValidateOnBuild`** — a documented but easy-to-miss footgun.
+
+The smoke test that "verified" the original fix (`CoreConfigurationTests`, 9/9 pass) did not configure validation in the same way, so it never traversed the ambiguous-constructor path.
+
+### Real fix — commit `d83d765a67`
+
+Replaced the `Services.AddSingleton<UriUtility>();` registration with a factory delegate that explicitly chooses the new constructor:
+
+```csharp
+Services.AddSingleton(sp => new UriUtility(sp.GetRequiredService<IUmbracoUriMapper>()));
+```
+
+Factory delegates bypass constructor selection entirely, so neither the validator nor the resolver has to disambiguate. The now-redundant `[ActivatorUtilitiesConstructor]` attribute and its `using Microsoft.Extensions.DependencyInjection;` import were removed from `UriUtility.cs` to avoid implying a guarantee the attribute does not provide.
+
+A short comment in the registration block records *why* the factory exists, so a future contributor doesn't simplify it back to the type-based form and reintroduce the bug.
+
+### Verification
+
+- `dotnet build src/Umbraco.Core/Umbraco.Core.csproj` — 0 errors, 475 pre-existing warnings.
+- Targeted re-run of the previously crashing fixture: `FullConfiguration_BootsSuccessfully` plus the rest of `CoreConfigurationTests` — **10/10 pass** in 2 s.
+- **Full integration suite (post-fix re-run)**: `dotnet test tests/Umbraco.Tests.Integration` against `planfirst@d83d765a67`, default SQLite — **Passed: 5,068 / Failed: 0 / Skipped: 26 / Total: 5,094, Duration: 18 m 40 s, exit code 0**. The 26 skips are pre-existing SQL-Server-specific tests that skip on SQLite (`BaseTestDatabase.IsSqlite()` guards), not failures.
+
+### Net change to the §8 caveat
+
+The integration-suite green-light promised in §8 was **not** achievable before this fix. It is now confirmed end-to-end: the full integration suite passes 5,068/5,068 against `d83d765a67`. **Plan success criterion §9.6 is now fully satisfied.**
+
+### Lessons captured for the spec
+
+The design (`docs/superpowers/specs/2026-04-25-uriutility-split-design.md` v2) is silent on DI-validation behavior because the original critical-design review did not anticipate `[ActivatorUtilitiesConstructor]`'s limited applicability. A v3 of the spec, if it were written, would replace §3.3's registration block with the factory form and add a note in §6 (Risks) that "DI containers with `ValidateOnBuild` enabled cannot disambiguate two satisfiable constructors via attribute alone — register `UriUtility` via factory delegate."
