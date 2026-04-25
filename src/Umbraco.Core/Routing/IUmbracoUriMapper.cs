@@ -1,6 +1,3 @@
-// Copyright (c) Umbraco.
-// See LICENSE for more details.
-
 using Umbraco.Cms.Core.Configuration.Models;
 
 namespace Umbraco.Cms.Core.Routing;
@@ -15,9 +12,11 @@ namespace Umbraco.Cms.Core.Routing;
 public interface IUmbracoUriMapper
 {
     /// <summary>
-    ///     The application path resolver this mapper was constructed with. Exposed so that consumers
-    ///     of the mapper do not need a separately injected resolver instance.
+    ///     Gets the application path resolver this mapper was constructed with.
     /// </summary>
+    /// <remarks>
+    ///     Exposed so that consumers of the mapper do not need a separately injected resolver instance.
+    /// </remarks>
     IApplicationPathResolver PathResolver { get; }
 
     /// <summary>

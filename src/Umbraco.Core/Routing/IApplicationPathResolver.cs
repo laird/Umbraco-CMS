@@ -1,6 +1,3 @@
-// Copyright (c) Umbraco.
-// See LICENSE for more details.
-
 namespace Umbraco.Cms.Core.Routing;
 
 /// <summary>
@@ -38,6 +35,8 @@ public interface IApplicationPathResolver
     /// <summary>
     ///     Resolves a relative URL to an absolute URL.
     /// </summary>
+    /// <param name="relativeUrl">The relative URL to resolve.</param>
+    /// <returns>The resolved absolute URL.</returns>
     /// <remarks>
     ///     If browsing http://example.com/sub/page1.aspx then ResolveUrl("page2.aspx") returns "/page2.aspx".
     /// </remarks>
