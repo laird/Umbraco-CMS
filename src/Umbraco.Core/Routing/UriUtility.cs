@@ -96,15 +96,6 @@ public sealed class UriUtility
     /// <returns>The internal Umbraco URI.</returns>
     public Uri UriToUmbraco(Uri uri) => _uriMapper.UriToUmbraco(uri);
 
-    /// <summary>
-    ///     Returns a full URL with the host, port, etc.
-    /// </summary>
-    /// <param name="absolutePath">An absolute path that starts with '/'.</param>
-    /// <param name="currentRequestUrl">The current request URL.</param>
-    /// <returns>The absolute URI.</returns>
-    internal Uri ToFullUrl(string absolutePath, Uri currentRequestUrl)
-        => ((UmbracoUriMapper)_uriMapper).ToFullUrl(absolutePath, currentRequestUrl);
-
     private static IUmbracoUriMapper BuildMapper(IHostingEnvironment hostingEnvironment)
     {
         ArgumentNullException.ThrowIfNull(hostingEnvironment);

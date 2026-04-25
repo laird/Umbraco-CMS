@@ -69,24 +69,4 @@ public sealed class UmbracoUriMapper : IUmbracoUriMapper
         return uri.Rewrite(path);
     }
 
-    /// <summary>
-    ///     Returns a full URL with host, port, etc. Internal — exposed on the facade only for legacy callers.
-    /// </summary>
-    /// <param name="absolutePath">An absolute path that starts with '/'.</param>
-    /// <param name="currentRequestUrl">The current request URL.</param>
-    /// <returns>The absolute URI.</returns>
-    internal Uri ToFullUrl(string absolutePath, Uri currentRequestUrl)
-    {
-        if (string.IsNullOrEmpty(absolutePath))
-        {
-            throw new ArgumentNullException(nameof(absolutePath));
-        }
-
-        if (!absolutePath.StartsWith("/", StringComparison.Ordinal))
-        {
-            throw new FormatException("The absolutePath specified does not start with a '/'");
-        }
-
-        return new Uri(absolutePath, UriKind.Relative).MakeAbsolute(currentRequestUrl);
-    }
 }
