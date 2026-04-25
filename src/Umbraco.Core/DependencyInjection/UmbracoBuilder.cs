@@ -205,6 +205,8 @@ namespace Umbraco.Cms.Core.DependencyInjection
             Services.AddUnique<ICultureDictionaryFactory, DefaultCultureDictionaryFactory>();
             Services.AddSingleton(f => f.GetRequiredService<ICultureDictionaryFactory>().CreateDictionary());
 
+            Services.AddSingleton<IApplicationPathResolver, ApplicationPathResolver>();
+            Services.AddSingleton<IUmbracoUriMapper, UmbracoUriMapper>();
             Services.AddSingleton<UriUtility>();
 
             Services.AddSingleton<IMetricsConsentService, MetricsConsentService>();
