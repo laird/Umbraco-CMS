@@ -105,6 +105,43 @@ public class UriUtilityTests
         Assert.AreEqual(expectedUrl, resultUrl);
     }
 
+    [TestCase("/")]
+    [TestCase("/foo")]
+    [TestCase("/foo/bar")]
+    [TestCase(null)]
+    public void Constructors_AreObservationallyEquivalent(string? virtualPath)
+    {
+        // Same IHostingEnvironment instance fed to both constructors.
+        var hosting = new Mock<IHostingEnvironment>();
+        hosting.Setup(x => x.ApplicationVirtualPath).Returns(virtualPath!);
+
+        var resolver = new ApplicationPathResolver(hosting.Object);
+        var mapper = new UmbracoUriMapper(resolver);
+
+#pragma warning disable CS0618 // Obsolete ctor — exercised intentionally for the equivalence test.
+        var viaObsolete = new UriUtility(hosting.Object);
+#pragma warning restore CS0618
+        var viaNew = new UriUtility(mapper);
+
+        Assert.AreEqual(viaObsolete.AppPath, viaNew.AppPath);
+        Assert.AreEqual(viaObsolete.AppPathPrefix, viaNew.AppPathPrefix);
+        Assert.AreEqual(viaObsolete.ToAbsolute("/foo"), viaNew.ToAbsolute("/foo"));
+        Assert.AreEqual(viaObsolete.ToAbsolute("~/foo"), viaNew.ToAbsolute("~/foo"));
+        Assert.AreEqual(viaObsolete.ToAppRelative("/foo/bar"), viaNew.ToAppRelative("/foo/bar"));
+        Assert.AreEqual(viaObsolete.ResolveUrl("~/foo"), viaNew.ResolveUrl("~/foo"));
+
+        var settings = new RequestHandlerSettings { AddTrailingSlash = true };
+        Assert.AreEqual(
+            viaObsolete.UriFromUmbraco(new Uri("/home", UriKind.Relative), settings).ToString(),
+            viaNew.UriFromUmbraco(new Uri("/home", UriKind.Relative), settings).ToString());
+        Assert.AreEqual(
+            viaObsolete.UriToUmbraco(new Uri("http://example/Home/")).ToString(),
+            viaNew.UriToUmbraco(new Uri("http://example/Home/")).ToString());
+        Assert.AreEqual(
+            viaObsolete.MediaUriFromUmbraco(new Uri("/media/x.jpg", UriKind.Relative)).ToString(),
+            viaNew.MediaUriFromUmbraco(new Uri("/media/x.jpg", UriKind.Relative)).ToString());
+    }
+
     private UriUtility BuildUriUtility(string virtualPath)
     {
         var mockHostingEnvironment = new Mock<IHostingEnvironment>();
