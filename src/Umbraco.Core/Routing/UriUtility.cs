@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Umbraco.Cms.Core.Configuration.Models;
 using Umbraco.Cms.Core.Hosting;
 
@@ -20,6 +21,7 @@ public sealed class UriUtility
     ///     Initializes a new instance of the <see cref="UriUtility" /> class.
     /// </summary>
     /// <param name="uriMapper">The URI mapper this facade delegates to.</param>
+    [ActivatorUtilitiesConstructor]
     public UriUtility(IUmbracoUriMapper uriMapper)
     {
         ArgumentNullException.ThrowIfNull(uriMapper);
