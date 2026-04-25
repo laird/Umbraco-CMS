@@ -79,6 +79,30 @@ public class ApplicationPathResolverTests
     }
 
     [Test]
+    public void ResolveUrl_AbsoluteSchemeUrl_ReturnedUnchanged()
+    {
+        var resolver = BuildResolver("/vdir");
+
+        Assert.AreEqual("https://example.com/page", resolver.ResolveUrl("https://example.com/page"));
+    }
+
+    [Test]
+    public void ResolveUrl_PlainRelative_PrependsPrefix()
+    {
+        var resolver = BuildResolver("/vdir");
+
+        Assert.AreEqual("/vdir/foo/bar", resolver.ResolveUrl("foo/bar"));
+    }
+
+    [Test]
+    public void ResolveUrl_NullInput_ThrowsArgumentNullException()
+    {
+        var resolver = BuildResolver("/");
+
+        Assert.Throws<ArgumentNullException>(() => resolver.ResolveUrl(null!));
+    }
+
+    [Test]
     public void TwoInstances_DistinctVirtualPaths_DoNotShareState()
     {
         // Locks in the bug fix: pre-refactor, both instances would silently share static fields.

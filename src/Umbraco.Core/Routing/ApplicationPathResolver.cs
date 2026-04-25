@@ -13,6 +13,10 @@ public sealed class ApplicationPathResolver : IApplicationPathResolver
     private readonly string _appPath;
     private readonly string _appPathPrefix;
 
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="ApplicationPathResolver" /> class.
+    /// </summary>
+    /// <param name="hostingEnvironment">The hosting environment from which the application virtual path is read.</param>
     public ApplicationPathResolver(IHostingEnvironment hostingEnvironment)
     {
         ArgumentNullException.ThrowIfNull(hostingEnvironment);
